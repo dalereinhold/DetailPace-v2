@@ -2,9 +2,9 @@
   "name": "DetailPace v2",
   "short_name": "DetailPace",
   "description": "A Progressive Web App",
-  "id": "/detailpace/",
-  "start_url": "/detailpace/",
-  "scope": "/detailpace/",
+  "id": "/detailpace-v2/",
+  "start_url": "/detailpace-v2/",
+  "scope": "/detailpace-v2/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "lang": "en",
@@ -13,31 +13,31 @@
   "theme_color": "#005f5a",
   "icons": [
     {
-      "src": "/detailpace/icons/icon-192x192.png",
+      "src": "/detailpace-v2/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/detailpace/icons/icon-384x384.png",
+      "src": "/detailpace-v2/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/detailpace/icons/icon-512x512.png",
+      "src": "/detailpace-v2/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/detailpace/icons/icon-192x192-maskable.png",
+      "src": "/detailpace-v2/icons/icon-192x192-maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/detailpace/icons/icon-512x512-maskable.png",
+      "src": "/detailpace-v2/icons/icon-512x512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

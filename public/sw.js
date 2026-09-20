@@ -1,11 +1,11 @@
 const CACHE_NAME = "detailpace-v2"
 const APP_SHELL = [
-  "/detailpace/",
-  "/detailpace/index.html",
-  "/detailpace/manifest.json",
-  "/detailpace/favicon.png",
-  "/detailpace/icons/icon-192x192-maskable.png",
-  "/detailpace/icons/icon-512x512-maskable.png",
+  "/detailpace-v2/",
+  "/detailpace-v2/index.html",
+  "/detailpace-v2/manifest.json",
+  "/detailpace-v2/favicon.png",
+  "/detailpace-v2/icons/icon-192x192-maskable.png",
+  "/detailpace-v2/icons/icon-512x512-maskable.png",
 ]
 
 self.addEventListener("install", event => {
@@ -37,7 +37,7 @@ self.addEventListener("fetch", event => {
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() =>
-        caches.match("/detailpace/index.html").then(response => {
+        caches.match("/detailpace-v2/index.html").then(response => {
           if (!response) {
             throw new Error("The cached app shell is unavailable.")
           }
