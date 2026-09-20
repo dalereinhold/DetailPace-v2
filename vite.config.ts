@@ -5,7 +5,7 @@ import { defineConfig } from "vite"
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "/detailpace-v2/",
+  base: "/DetailPace-v2/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
