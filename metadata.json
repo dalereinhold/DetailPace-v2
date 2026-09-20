@@ -1,7 +1,0 @@
-{
-	"name": "DetailPace",
-	"description": "Detailing Tracker & Metrics",
-	"requestFramePermissions": [],
-	"majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
-
