@@ -2,7 +2,7 @@ name: Deploy Vite React App to Pages
 
 on:
   push:
-    branches: ['main'] # Change to 'master' if your main branch is master
+    branches: ['main']
   workflow_dispatch:
 
 permissions:
@@ -27,7 +27,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9 # Matches or defaults to your local pnpm major version
+          version: 9
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -40,8 +40,8 @@ jobs:
 
       - name: Build project
         env:
-        VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-        VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: pnpm run build
 
       - name: Setup Pages
