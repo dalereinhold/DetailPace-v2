@@ -36,10 +36,11 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build project
         env:
+          GITHUB_ACTIONS: 'true'
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: pnpm run build
