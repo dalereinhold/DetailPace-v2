@@ -59,6 +59,7 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [isJobFocused, setIsJobFocused] = useState(false)
   const { resolvedTheme, toggleTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const isMobile = useIsMobile()
@@ -82,24 +83,46 @@ export default function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (isJobFocused && activeTab === "jobs") {
+      document.documentElement.classList.add("overflow-hidden")
+      document.body.classList.add("overflow-hidden")
+      return () => {
+        document.documentElement.classList.remove("overflow-hidden")
+        document.body.classList.remove("overflow-hidden")
+      }
+    }
+  }, [isJobFocused, activeTab])
+
   const triggerRefresh = () => {
     setRefreshTrigger(prev => prev + 1)
+  }
+
+  const handleTabChange = (tab: ActiveTab) => {
+    if (tab !== "jobs") {
+      setIsJobFocused(false)
+    }
+    setActiveTab(tab)
   }
 
   return (
     <div
       id="detailpace-app-root"
-      className="min-h-screen bg-background text-foreground transition-colors duration-200"
+      className={`bg-background text-foreground transition-colors duration-200 ${
+        isJobFocused && activeTab === "jobs"
+          ? "h-screen h-[100dvh] overflow-hidden flex flex-col"
+          : "min-h-screen"
+      }`}
     >
       {/* Top Navigation & Brand Header */}
-      <header className="border-b border-border bg-card/70 backdrop-blur-md sticky top-0 z-30">
+      <header className="border-b border-border bg-card/70 backdrop-blur-md sticky top-0 z-30 shrink-0">
         {/* Main Header Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
           {/* Brand Logo & Heading */}
           <div className="flex items-center gap-3 shrink-0 select-none">
             <button
               type="button"
-              onClick={() => setActiveTab("jobs")}
+              onClick={() => handleTabChange("jobs")}
               aria-label="Go to Jobs"
               className="size-9 bg-primary flex items-center justify-center text-primary-foreground shadow-xs shrink-0 hover:opacity-90 transition-opacity cursor-pointer border-none p-0 focus:outline-none"
             >
@@ -176,7 +199,7 @@ export default function App() {
               <nav className="flex items-center gap-1 py-1 font-mono text-xs">
                 <button
                   type="button"
-                  onClick={() => setActiveTab("jobs")}
+                  onClick={() => handleTabChange("jobs")}
                   className={`flex items-center gap-2 px-3 py-1.5 font-semibold uppercase tracking-wider transition-colors cursor-pointer border-none bg-transparent ${
                     activeTab === "jobs"
                       ? "bg-accent text-accent-foreground font-bold"
@@ -189,7 +212,7 @@ export default function App() {
 
                 <button
                   type="button"
-                  onClick={() => setActiveTab("intake")}
+                  onClick={() => handleTabChange("intake")}
                   className={`flex items-center gap-2 px-3 py-1.5 font-semibold uppercase tracking-wider transition-colors cursor-pointer border-none bg-transparent ${
                     activeTab === "intake"
                       ? "bg-accent text-accent-foreground font-bold"
@@ -202,7 +225,7 @@ export default function App() {
 
                 <button
                   type="button"
-                  onClick={() => setActiveTab("records")}
+                  onClick={() => handleTabChange("records")}
                   className={`flex items-center gap-2 px-3 py-1.5 font-semibold uppercase tracking-wider transition-colors cursor-pointer border-none bg-transparent ${
                     activeTab === "records"
                       ? "bg-accent text-accent-foreground font-bold"
@@ -215,7 +238,7 @@ export default function App() {
 
                 <button
                   type="button"
-                  onClick={() => setActiveTab("stats")}
+                  onClick={() => handleTabChange("stats")}
                   className={`flex items-center gap-2 px-3 py-1.5 font-semibold uppercase tracking-wider transition-colors cursor-pointer border-none bg-transparent ${
                     activeTab === "stats"
                       ? "bg-accent text-accent-foreground font-bold"
@@ -248,18 +271,27 @@ export default function App() {
 
       {/* Main View Area */}
       <main
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 ${
-          isMobile ? "pb-24" : "pb-8"
+        className={`max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 ${
+          isJobFocused && activeTab === "jobs"
+            ? `flex-1 min-h-0 flex flex-col overflow-hidden py-3 sm:py-4 ${
+                isMobile ? "pb-20" : "pb-4"
+              }`
+            : `py-6 sm:py-8 ${isMobile ? "pb-24" : "pb-8"}`
         }`}
       >
         <Suspense fallback={<FeatureLoadingState />}>
           {/* VIEW 1: JOBS (Active Tab On Load) */}
           {activeTab === "jobs" && (
-            <div className="space-y-6 animate-in fade-in duration-200">
+            <div
+              className={`animate-in fade-in duration-200 ${
+                isJobFocused ? "h-full min-h-0 flex flex-col" : "space-y-6"
+              }`}
+            >
               <PaceJobs
                 refreshTrigger={refreshTrigger}
                 onVehiclesUpdated={triggerRefresh}
                 onAddVehicleClick={() => setIsIntakeOpen(true)}
+                onFocusedChange={setIsJobFocused}
               />
             </div>
           )}
@@ -267,7 +299,10 @@ export default function App() {
           {/* VIEW 2: INTAKE (Full Tab Registration Page) */}
           {activeTab === "intake" && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              <PaceIntake onVehicleAdded={triggerRefresh} onCancel={() => setActiveTab("jobs")} />
+              <PaceIntake
+                onVehicleAdded={triggerRefresh}
+                onCancel={() => handleTabChange("jobs")}
+              />
             </div>
           )}
 
@@ -301,7 +336,7 @@ export default function App() {
           <button
             id="mobile-nav-jobs"
             type="button"
-            onClick={() => setActiveTab("jobs")}
+            onClick={() => handleTabChange("jobs")}
             className={`flex flex-col items-center justify-center flex-1 py-1 px-0.5 text-xs font-mono transition-colors ${
               activeTab === "jobs"
                 ? "text-primary font-bold"
@@ -316,7 +351,7 @@ export default function App() {
           <button
             id="mobile-nav-records"
             type="button"
-            onClick={() => setActiveTab("records")}
+            onClick={() => handleTabChange("records")}
             className={`flex flex-col items-center justify-center flex-1 py-1 px-0.5 text-xs font-mono transition-colors ${
               activeTab === "records"
                 ? "text-primary font-bold"
@@ -342,7 +377,7 @@ export default function App() {
           <button
             id="mobile-nav-metrics"
             type="button"
-            onClick={() => setActiveTab("stats")}
+            onClick={() => handleTabChange("stats")}
             className={`flex flex-col items-center justify-center flex-1 py-1 px-0.5 text-xs font-mono transition-colors ${
               activeTab === "stats"
                 ? "text-primary font-bold"

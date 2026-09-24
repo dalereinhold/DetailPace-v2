@@ -2,7 +2,6 @@ import { ArrowLeft, LayoutGrid, Plus } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { useIsMobile } from "@/hooks/use-mobile"
 import { getDisplayStatus, STATUS_ORDER } from "@/lib/pace/vehicle"
 import { supabase, type Vehicle } from "@/lib/supabase"
 import VehicleCard from "./vehicle-card"
@@ -13,18 +12,19 @@ interface PaceJobsProps {
   refreshTrigger?: number
   onVehiclesUpdated?: () => void
   onAddVehicleClick?: () => void
+  onFocusedChange?: (isFocused: boolean) => void
 }
 
 export default function PaceJobs({
   refreshTrigger,
   onVehiclesUpdated,
   onAddVehicleClick,
+  onFocusedChange,
 }: PaceJobsProps) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [focusedVehicleId, setFocusedVehicleId] = useState<string | null>(null)
-  const isMobile = useIsMobile()
 
   const fetchVehicles = useCallback(async () => {
     setError(null)
@@ -68,8 +68,18 @@ export default function PaceJobs({
     }
   }, [focusedVehicle, focusedVehicleId])
 
+  useEffect(() => {
+    onFocusedChange?.(Boolean(focusedVehicle))
+    return () => {
+      onFocusedChange?.(false)
+    }
+  }, [focusedVehicle, onFocusedChange])
+
   return (
-    <div className="space-y-6" id="pace-jobs-container">
+    <div
+      className={focusedVehicle ? "h-full min-h-0 flex flex-col" : "space-y-6"}
+      id="pace-jobs-container"
+    >
       {/* Error Notice */}
       {error && (
         <div className="border border-destructive/40 bg-destructive/10 text-destructive px-4 py-3 text-xs font-mono flex items-center justify-between">
@@ -132,38 +142,45 @@ export default function PaceJobs({
                   key={vehicle.id}
                   vehicle={vehicle}
                   onUpdated={handleVehicleUpdated}
-                  onOpenFocus={isMobile ? () => setFocusedVehicleId(vehicle.id) : undefined}
+                  onOpenFocus={() => setFocusedVehicleId(vehicle.id)}
                 />
               ))}
             </div>
           </div>
         ))}
 
-      {isMobile && focusedVehicle && (
-        <div className="flex h-[calc(100dvh-11rem)] min-h-0 flex-col overflow-hidden animate-in fade-in duration-200">
-          <div className="flex items-center gap-3 border-b border-border pb-4">
+      {focusedVehicle && (
+        <div className="flex flex-1 min-h-0 h-full flex-col overflow-hidden animate-in fade-in duration-200 gap-3">
+          {/* Focused View Header Bar */}
+          <div className="flex items-center justify-between shrink-0">
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={() => setFocusedVehicleId(null)}
-              aria-label="Close focused vehicle view"
-              className="size-9 shrink-0"
+              aria-label="Back to all jobs"
+              className="gap-2 font-mono text-xs uppercase tracking-wider h-8"
             >
-              <ArrowLeft className="size-5" />
+              <ArrowLeft className="size-3.5" />
+              <span>Back to Jobs</span>
             </Button>
-            <div>
-              <p className="font-heading text-sm font-bold uppercase tracking-wider">Focused Job</p>
-              <p className="font-mono text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground hidden sm:inline">
+                Focused Job
+              </span>
+              <span className="font-mono text-xs font-bold text-foreground bg-muted px-2.5 py-0.5 border border-border">
                 {focusedVehicle.license_plate}
-              </p>
+              </span>
             </div>
           </div>
-          <div className="min-h-0 flex-1 py-6">
+
+          {/* Focused Vehicle Card Container */}
+          <div className="min-h-0 flex-1 flex flex-col">
             <VehicleCard
               key={`focused-${focusedVehicle.id}`}
               vehicle={focusedVehicle}
               onUpdated={handleVehicleUpdated}
               isFocused
+              onCloseFocus={() => setFocusedVehicleId(null)}
               className="h-full"
             />
           </div>
