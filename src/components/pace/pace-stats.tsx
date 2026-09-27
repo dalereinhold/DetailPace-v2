@@ -41,55 +41,55 @@ type TimeUnit = "hours" | "minutes"
 const chartConfig: ChartConfig = {
   New: {
     label: "New Vehicle",
-    color: "oklch(0.65 0.18 220)",
+    color: "var(--chart-new)",
   },
   Used: {
     label: "Used Vehicle",
-    color: "oklch(0.72 0.16 55)",
+    color: "var(--chart-used)",
   },
   Demo: {
     label: "Demo Vehicle",
-    color: "oklch(0.65 0.22 300)",
+    color: "var(--chart-demo)",
   },
   target: {
     label: "Target Benchmark",
-    color: "oklch(0.6 0.03 240)",
+    color: "var(--chart-target)",
   },
   actual: {
     label: "Actual Avg",
-    color: "oklch(0.65 0.17 155)",
+    color: "var(--chart-actual)",
   },
   "Full Detail": {
     label: "Full Detail",
-    color: "oklch(0.65 0.18 220)",
+    color: "var(--chart-full-detail)",
   },
   "Ceramic Coating": {
     label: "Ceramic Coating",
-    color: "oklch(0.65 0.22 300)",
+    color: "var(--chart-ceramic-coating)",
   },
   "Quick Detail": {
     label: "Quick Detail",
-    color: "oklch(0.72 0.16 55)",
+    color: "var(--chart-quick-detail)",
   },
   "Delivery Prep": {
     label: "Delivery Prep",
-    color: "oklch(0.65 0.22 25)",
+    color: "var(--chart-delivery-prep)",
   },
   "Full-Detail": {
     label: "Full Detail",
-    color: "oklch(0.65 0.18 220)",
+    color: "var(--chart-full-detail)",
   },
   "Ceramic-Coating": {
     label: "Ceramic Coating",
-    color: "oklch(0.65 0.22 300)",
+    color: "var(--chart-ceramic-coating)",
   },
   "Quick-Detail": {
     label: "Quick Detail",
-    color: "oklch(0.72 0.16 55)",
+    color: "var(--chart-quick-detail)",
   },
   "Delivery-Prep": {
     label: "Delivery Prep",
-    color: "oklch(0.65 0.22 25)",
+    color: "var(--chart-delivery-prep)",
   },
 }
 
@@ -374,11 +374,11 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-500 ${
+                  className={`h-full w-(--progress-width) transition-all duration-500 ${
                     overall && overall.variancePct <= 0 ? "bg-emerald-500" : "bg-amber-500"
                   }`}
                   style={{
-                    width: `${
+                    "--progress-width": `${
                       overall && overall.estimatedSeconds > 0
                         ? Math.min(
                             100,
@@ -493,8 +493,8 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                   return (
                     <div
                       key={type}
-                      className={`${VEHICLE_TYPE_BAR_COLORS[type]} h-full`}
-                      style={{ width: `${widthPct}%` }}
+                      className={`${VEHICLE_TYPE_BAR_COLORS[type]} h-full w-(--progress-width)`}
+                      style={{ "--progress-width": `${widthPct}%` }}
                       title={`${type}: ${typeCount} vehicles (${Math.round(widthPct)}%)`}
                     />
                   )
@@ -591,10 +591,10 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
 
                       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className={`h-full transition-all duration-500 ${
+                          className={`h-full w-(--progress-width) transition-all duration-500 ${
                             item.isFaster ? "bg-emerald-500" : "bg-amber-500"
                           }`}
-                          style={{ width: `${Math.min(100, pctOfTarget)}%` }}
+                          style={{ "--progress-width": `${Math.min(100, pctOfTarget)}%` }}
                         />
                       </div>
                     </div>
@@ -834,28 +834,28 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                   <Bar
                     dataKey="Full Detail"
                     name="Full Detail"
-                    fill="var(--color-Full-Detail, oklch(0.65 0.18 220))"
+                    fill="var(--color-Full-Detail)"
                     radius={[4, 4, 0, 0]}
                     maxBarSize={45}
                   />
                   <Bar
                     dataKey="Ceramic Coating"
                     name="Ceramic Coating"
-                    fill="var(--color-Ceramic-Coating, oklch(0.65 0.22 300))"
+                    fill="var(--color-Ceramic-Coating)"
                     radius={[4, 4, 0, 0]}
                     maxBarSize={45}
                   />
                   <Bar
                     dataKey="Quick Detail"
                     name="Quick Detail"
-                    fill="var(--color-Quick-Detail, oklch(0.72 0.16 55))"
+                    fill="var(--color-Quick-Detail)"
                     radius={[4, 4, 0, 0]}
                     maxBarSize={45}
                   />
                   <Bar
                     dataKey="Delivery Prep"
                     name="Delivery Prep"
-                    fill="var(--color-Delivery-Prep, oklch(0.65 0.22 25))"
+                    fill="var(--color-Delivery-Prep)"
                     radius={[4, 4, 0, 0]}
                     maxBarSize={45}
                   />

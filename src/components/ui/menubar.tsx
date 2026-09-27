@@ -1,4 +1,4 @@
-import { cn } from "cn"
+import { cn } from "@/lib/utils"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 import { Menubar as MenubarPrimitive } from "radix-ui"
 import type * as React from "react"
