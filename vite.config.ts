@@ -7,7 +7,7 @@ import { defineConfig } from "vite"
 export default defineConfig({
   // GitHub Actions sets GITHUB_ACTIONS=true automatically during deploy
   // Otherwise default to '/' for local dev, AI Studio, Bolt, and Tailscale
-  base: process.env.GITHUB_ACTIONS ? '/DetailPace-v2/' : '/',
+  base: process.env.GITHUB_ACTIONS ? "/DetailPace-v2/" : "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

@@ -1,5 +1,6 @@
 import {
   Check,
+  CheckSquare,
   ChevronsLeft,
   ChevronsRight,
   FileEdit,
@@ -25,6 +26,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Pagination,
   PaginationContent,
@@ -63,6 +73,7 @@ import {
   type Vehicle,
   type VehicleCondition,
   type VehicleServiceType,
+  type VehicleStatus,
   type VehicleType,
 } from "@/lib/supabase"
 
@@ -117,6 +128,12 @@ export default function PaceRecords({
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  // Selection & Multi-Select state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null)
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+
   const fetchVehicles = useCallback(async () => {
     setError(null)
     const { data, error: dbError } = await supabase
@@ -127,7 +144,17 @@ export default function PaceRecords({
     if (dbError) {
       setError(dbError.message)
     } else {
-      setVehicles((data as Vehicle[]) ?? [])
+      const nextVehicles = (data as Vehicle[]) ?? []
+      setVehicles(nextVehicles)
+      const validIds = new Set(nextVehicles.map(v => v.id))
+      setSelectedIds(prev => {
+        if (prev.size === 0) return prev
+        const next = new Set<string>()
+        for (const id of prev) {
+          if (validIds.has(id)) next.add(id)
+        }
+        return next.size === prev.size ? prev : next
+      })
     }
     setLoading(false)
   }, [])
@@ -148,9 +175,10 @@ export default function PaceRecords({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsFilterOpen(false)
+        setConfirmBulkDelete(false)
       }
     }
-    if (isFilterOpen) {
+    if (isFilterOpen || confirmBulkDelete) {
       document.addEventListener("mousedown", handleClickOutside)
       document.addEventListener("keydown", handleKeyDown)
     }
@@ -158,7 +186,7 @@ export default function PaceRecords({
       document.removeEventListener("mousedown", handleClickOutside)
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isFilterOpen])
+  }, [isFilterOpen, confirmBulkDelete])
 
   const handleDelete = async (e: React.MouseEvent, vehicle: Vehicle) => {
     e.stopPropagation()
@@ -171,11 +199,17 @@ export default function PaceRecords({
     setDeletingId(null)
 
     if (delError) {
-      alert(`Failed to delete: ${delError.message}`)
+      setError(`Failed to delete: ${delError.message}`)
     } else {
       if (selectedVehicle?.id === vehicle.id) {
         setSelectedVehicle(null)
       }
+      setSelectedIds(prev => {
+        if (!prev.has(vehicle.id)) return prev
+        const next = new Set(prev)
+        next.delete(vehicle.id)
+        return next
+      })
       fetchVehicles()
       onRefresh?.()
     }
@@ -261,6 +295,135 @@ export default function PaceRecords({
     setCurrentPage(1)
   }, [search, statusFilter, typeFilter, conditionFilter, serviceTypeFilter])
 
+  // Selection helpers
+  const allPageSelected = useMemo(
+    () => paginated.length > 0 && paginated.every(v => selectedIds.has(v.id)),
+    [paginated, selectedIds]
+  )
+  const somePageSelected = useMemo(
+    () => paginated.some(v => selectedIds.has(v.id)) && !allPageSelected,
+    [paginated, selectedIds, allPageSelected]
+  )
+  const allFilteredSelected = useMemo(
+    () => sorted.length > 0 && sorted.every(v => selectedIds.has(v.id)),
+    [sorted, selectedIds]
+  )
+
+  const handleTogglePageSelection = useCallback(() => {
+    setConfirmBulkDelete(false)
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (allPageSelected) {
+        for (const v of paginated) {
+          next.delete(v.id)
+        }
+      } else {
+        for (const v of paginated) {
+          next.add(v.id)
+        }
+      }
+      return next
+    })
+  }, [allPageSelected, paginated])
+
+  const handleSelectAllFiltered = useCallback(() => {
+    setConfirmBulkDelete(false)
+    setSelectedIds(new Set(sorted.map(v => v.id)))
+  }, [sorted])
+
+  const handleClearSelection = useCallback(() => {
+    setConfirmBulkDelete(false)
+    setSelectedIds(new Set())
+    setLastSelectedId(null)
+  }, [])
+
+  const handleRowSelectionToggle = useCallback(
+    (vehicleId: string, shiftKey: boolean) => {
+      setConfirmBulkDelete(false)
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        const shouldSelect = !next.has(vehicleId)
+
+        if (shiftKey && lastSelectedId && lastSelectedId !== vehicleId) {
+          const startIdx = sorted.findIndex(v => v.id === lastSelectedId)
+          const endIdx = sorted.findIndex(v => v.id === vehicleId)
+          if (startIdx !== -1 && endIdx !== -1) {
+            const [from, to] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx]
+            for (let i = from; i <= to; i++) {
+              const id = sorted[i].id
+              if (shouldSelect) {
+                next.add(id)
+              } else {
+                next.delete(id)
+              }
+            }
+            return next
+          }
+        }
+
+        if (shouldSelect) {
+          next.add(vehicleId)
+        } else {
+          next.delete(vehicleId)
+        }
+        return next
+      })
+      setLastSelectedId(vehicleId)
+    },
+    [lastSelectedId, sorted]
+  )
+
+  const handleBulkStatusChange = async (newStatus: VehicleStatus) => {
+    if (selectedIds.size === 0) return
+    setIsBulkProcessing(true)
+    setError(null)
+    const nowIso = new Date().toISOString()
+    const ids = Array.from(selectedIds)
+
+    const { error: updateError } = await supabase
+      .from("vehicles")
+      .update({
+        status: newStatus,
+        ...(newStatus === "In Progress" ? { started_at: nowIso, break_started_at: null } : {}),
+        ...(newStatus === "On Break" ? { break_started_at: nowIso } : {}),
+        ...(newStatus === "Completed" ? { break_started_at: null } : {}),
+        updated_at: nowIso,
+      })
+      .in("id", ids)
+
+    setIsBulkProcessing(false)
+
+    if (updateError) {
+      setError(`Bulk status update failed: ${updateError.message}`)
+    } else {
+      await fetchVehicles()
+      onRefresh?.()
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return
+    setIsBulkProcessing(true)
+    setError(null)
+    const ids = Array.from(selectedIds)
+
+    const { error: deleteError } = await supabase.from("vehicles").delete().in("id", ids)
+    setIsBulkProcessing(false)
+    setConfirmBulkDelete(false)
+
+    if (deleteError) {
+      setError(`Bulk delete failed: ${deleteError.message}`)
+    } else {
+      if (selectedVehicle && selectedIds.has(selectedVehicle.id)) {
+        setSelectedVehicle(null)
+      }
+      setSelectedIds(new Set())
+      setLastSelectedId(null)
+      await fetchVehicles()
+      onRefresh?.()
+    }
+  }
+
   const startIndex = sorted.length === 0 ? 0 : (currentPage - 1) * ROWS_PER_PAGE + 1
   const endIndex = Math.min(currentPage * ROWS_PER_PAGE, sorted.length)
   const pageNumbers = useMemo(
@@ -280,6 +443,17 @@ export default function PaceRecords({
         0
       ),
     [sorted]
+  )
+  const selectedNetSeconds = useMemo(
+    () =>
+      vehicles.reduce(
+        (total, vehicle) =>
+          selectedIds.has(vehicle.id)
+            ? total + (isPending(vehicle) ? 0 : computeLiveSeconds(vehicle))
+            : total,
+        0
+      ),
+    [vehicles, selectedIds]
   )
   const filteredActive = filtered.filter(v => v.status === "In Progress" && !isPending(v)).length
   const filteredOnBreak = filtered.filter(v => v.status === "On Break").length
@@ -309,6 +483,11 @@ export default function PaceRecords({
               <Badge variant="outline" className="font-mono text-xs">
                 {filtered.length} of {vehicles.length} Records
               </Badge>
+              {selectedIds.size > 0 && (
+                <Badge variant="default" className="font-mono text-xs">
+                  {selectedIds.size} Selected
+                </Badge>
+              )}
             </div>
             <CardDescription className="mt-1">
               Comprehensive vehicle logs with live timing and status tracking from Supabase.
@@ -633,11 +812,141 @@ export default function PaceRecords({
           </div>
         )}
 
+        {/* Contextual Multi-Select Action Bar */}
+        {selectedIds.size > 0 && (
+          <div
+            id="records-selection-toolbar"
+            className="px-4 sm:px-6 py-2.5 bg-primary/8 dark:bg-primary/15 border-b border-primary/25 flex flex-wrap items-center justify-between gap-3 text-xs font-mono animate-in fade-in duration-150"
+          >
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1.5 font-bold text-foreground">
+                <CheckSquare className="size-3.5 text-primary" />
+                <span>
+                  {selectedIds.size} {selectedIds.size === 1 ? "record" : "records"} selected
+                </span>
+              </div>
+
+              <span className="text-muted-foreground hidden sm:inline">&bull;</span>
+              <span className="text-muted-foreground text-[11px] hidden sm:inline">
+                Net Time:{" "}
+                <strong className="text-foreground tabular-nums">
+                  {formatDuration(selectedNetSeconds)}
+                </strong>
+              </span>
+
+              {!allFilteredSelected && sorted.length > paginated.length && (
+                <button
+                  type="button"
+                  onClick={handleSelectAllFiltered}
+                  className="text-[11px] text-primary hover:underline font-semibold ml-1"
+                >
+                  Select all {sorted.length} matching
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                className="text-[11px] text-muted-foreground hover:text-foreground underline ml-1"
+              >
+                Clear selection
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {selectedIds.size === 1 && (
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => {
+                    const onlyId = Array.from(selectedIds)[0]
+                    const found = vehicles.find(v => v.id === onlyId)
+                    if (found) {
+                      setSelectedVehicle(found)
+                      onVehicleSelect?.(found)
+                    }
+                  }}
+                >
+                  <FileEdit className="size-3" />
+                  <span>Inspect</span>
+                </Button>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="xs" disabled={isBulkProcessing}>
+                    <span>Set Status</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44 font-mono">
+                  <DropdownMenuLabel>Update {selectedIds.size} Selected</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void handleBulkStatusChange("In Progress")}>
+                    <span className="size-2 rounded-full bg-sky-500" />
+                    <span>In Progress</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void handleBulkStatusChange("On Break")}>
+                    <span className="size-2 rounded-full bg-amber-500" />
+                    <span>On Break</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void handleBulkStatusChange("Completed")}>
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <span>Completed</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {confirmBulkDelete ? (
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="destructive"
+                    size="xs"
+                    disabled={isBulkProcessing}
+                    onClick={() => void handleBulkDelete()}
+                  >
+                    <Trash2 className="size-3" />
+                    <span>Confirm Delete ({selectedIds.size})</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    disabled={isBulkProcessing}
+                    onClick={() => setConfirmBulkDelete(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="destructive"
+                  size="xs"
+                  disabled={isBulkProcessing}
+                  onClick={() => setConfirmBulkDelete(true)}
+                >
+                  <Trash2 className="size-3" />
+                  <span>Delete ({selectedIds.size})</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Table Records Body */}
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
+                <TableHead className="w-10 px-3">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      aria-label="Select all rows on this page"
+                      checked={allPageSelected ? true : somePageSelected ? "indeterminate" : false}
+                      onCheckedChange={handleTogglePageSelection}
+                      disabled={loading || paginated.length === 0}
+                    />
+                  </div>
+                </TableHead>
+
                 <TableHead
                   className="w-36 cursor-pointer select-none"
                   onClick={() => handleSort("license_plate")}
@@ -719,14 +1028,14 @@ export default function PaceRecords({
               {loading ? (
                 SKELETON_ROWS.map(key => (
                   <TableRow key={key}>
-                    <TableCell colSpan={8} className="py-4">
+                    <TableCell colSpan={9} className="py-4">
                       <div className="h-6 bg-muted animate-pulse w-full" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-40 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="h-40 text-center text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Search className="size-6 text-muted-foreground/50" />
                       <p className="text-xs font-mono uppercase tracking-wider">
@@ -750,18 +1059,49 @@ export default function PaceRecords({
                     liveSecs > 0
                       ? formatDuration(liveSecs)
                       : formatDuration(vehicle.net_work_seconds)
+                  const isRowSelected = selectedIds.has(vehicle.id)
 
                   return (
                     <TableRow
                       key={vehicle.id}
-                      onClick={() => {
+                      data-state={isRowSelected ? "selected" : undefined}
+                      onClick={e => {
+                        if (e.shiftKey || e.metaKey || e.ctrlKey) {
+                          e.preventDefault()
+                          handleRowSelectionToggle(vehicle.id, e.shiftKey)
+                          return
+                        }
                         setSelectedVehicle(vehicle)
                         onVehicleSelect?.(vehicle)
                       }}
                       className={`cursor-pointer hover:bg-muted/40 transition-colors ${
-                        selectedVehicle?.id === vehicle.id ? "bg-muted/60" : ""
+                        isRowSelected
+                          ? "bg-primary/8 dark:bg-primary/15"
+                          : selectedVehicle?.id === vehicle.id
+                            ? "bg-muted/60"
+                            : ""
                       }`}
                     >
+                      {/* Row Select Checkbox */}
+                      <TableCell
+                        className="w-10 px-3"
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleRowSelectionToggle(vehicle.id, e.shiftKey)
+                        }}
+                      >
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            aria-label={`Select vehicle ${vehicle.license_plate}`}
+                            checked={isRowSelected}
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleRowSelectionToggle(vehicle.id, e.shiftKey)
+                            }}
+                          />
+                        </div>
+                      </TableCell>
+
                       {/* License Plate */}
                       <TableCell className="font-bold tracking-wider font-mono text-foreground text-xs uppercase">
                         {vehicle.license_plate}
@@ -872,8 +1212,12 @@ export default function PaceRecords({
 
             <TableFooter>
               <TableRow>
+                <TableCell />
                 <TableCell className="font-mono text-xs font-bold">
                   {filtered.length} Records
+                  {selectedIds.size > 0 && (
+                    <span className="text-primary ml-1.5">({selectedIds.size} sel)</span>
+                  )}
                 </TableCell>
                 <TableCell />
                 <TableCell />
@@ -896,7 +1240,7 @@ export default function PaceRecords({
         {/* Footer pagination: first, previous, page numbers, next, and last */}
         <CardFooter className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-muted-foreground border-t border-border p-4 font-mono">
           {/* Left: Summary */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span>Showing </span>
             <span className="font-bold text-foreground font-mono">
               {sorted.length === 0 ? "0" : `${startIndex}–${endIndex}`}
@@ -907,6 +1251,11 @@ export default function PaceRecords({
             {filtered.length !== vehicles.length && (
               <span className="text-muted-foreground/70 text-[11px] ml-1">
                 (filtered from {vehicles.length})
+              </span>
+            )}
+            {selectedIds.size > 0 && (
+              <span className="text-primary font-semibold ml-1">
+                &bull; {selectedIds.size} of {sorted.length} selected
               </span>
             )}
           </div>
@@ -1031,6 +1380,12 @@ export default function PaceRecords({
         }}
         onDeleted={deletedId => {
           setVehicles(prev => prev.filter(v => v.id !== deletedId))
+          setSelectedIds(prev => {
+            if (!prev.has(deletedId)) return prev
+            const next = new Set(prev)
+            next.delete(deletedId)
+            return next
+          })
           setSelectedVehicle(null)
           onRefresh?.()
         }}

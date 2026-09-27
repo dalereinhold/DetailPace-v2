@@ -24,3 +24,7 @@ dist-ssr
 
 # Environment variables
 .env
+
+# lockfile
+bun.lock
+package-lock.json
