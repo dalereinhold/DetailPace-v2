@@ -386,7 +386,7 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                           )
                         : 0
                     }%`,
-                  }}
+                  } as React.CSSProperties}
                 />
               </div>
             </div>
@@ -494,7 +494,7 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                     <div
                       key={type}
                       className={`${VEHICLE_TYPE_BAR_COLORS[type]} h-full w-(--progress-width)`}
-                      style={{ "--progress-width": `${widthPct}%` }}
+                      style={{ "--progress-width": `${widthPct}%` } as React.CSSProperties}
                       title={`${type}: ${typeCount} vehicles (${Math.round(widthPct)}%)`}
                     />
                   )
@@ -594,7 +594,7 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                           className={`h-full w-(--progress-width) transition-all duration-500 ${
                             item.isFaster ? "bg-emerald-500" : "bg-amber-500"
                           }`}
-                          style={{ "--progress-width": `${Math.min(100, pctOfTarget)}%` }}
+                          style={{ "--progress-width": `${Math.min(100, pctOfTarget)}%` } as React.CSSProperties}
                         />
                       </div>
                     </div>
