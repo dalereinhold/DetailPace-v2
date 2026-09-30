@@ -377,16 +377,18 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                   className={`h-full w-(--progress-width) transition-all duration-500 ${
                     overall && overall.variancePct <= 0 ? "bg-emerald-500" : "bg-amber-500"
                   }`}
-                  style={{
-                    "--progress-width": `${
-                      overall && overall.estimatedSeconds > 0
-                        ? Math.min(
-                            100,
-                            Math.max(10, (overall.avgSeconds / overall.estimatedSeconds) * 100)
-                          )
-                        : 0
-                    }%`,
-                  } as React.CSSProperties}
+                  style={
+                    {
+                      "--progress-width": `${
+                        overall && overall.estimatedSeconds > 0
+                          ? Math.min(
+                              100,
+                              Math.max(10, (overall.avgSeconds / overall.estimatedSeconds) * 100)
+                            )
+                          : 0
+                      }%`,
+                    } as React.CSSProperties
+                  }
                 />
               </div>
             </div>
@@ -594,7 +596,11 @@ export default function PaceStats({ refreshTrigger, onRefresh }: PaceStatsProps)
                           className={`h-full w-(--progress-width) transition-all duration-500 ${
                             item.isFaster ? "bg-emerald-500" : "bg-amber-500"
                           }`}
-                          style={{ "--progress-width": `${Math.min(100, pctOfTarget)}%` } as React.CSSProperties}
+                          style={
+                            {
+                              "--progress-width": `${Math.min(100, pctOfTarget)}%`,
+                            } as React.CSSProperties
+                          }
                         />
                       </div>
                     </div>

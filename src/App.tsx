@@ -115,7 +115,7 @@ export default function App() {
       }`}
     >
       {/* Top Navigation & Brand Header */}
-      <header className="border-b border-border bg-card/70 backdrop-blur-md sticky top-0 z-30 shrink-0">
+      <header className="header-diagonal-grid isolate overflow-hidden border-b border-border bg-card/70 backdrop-blur-md sticky top-0 z-30 shrink-0">
         {/* Main Header Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
           {/* Brand Logo & Heading */}

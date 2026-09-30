@@ -267,7 +267,10 @@ export default function PaceIntake({
             </Field>
 
             {/* Auto-Selected Presets Summary Card */}
-            <div className="p-4 bg-muted/40 border border-border space-y-3 font-mono text-xs">
+            <div
+              data-slot="card"
+              className="card-diagonal-grid relative isolate overflow-hidden p-4 bg-muted/40 border border-border space-y-3 font-mono text-xs"
+            >
               <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] uppercase tracking-wider font-semibold">
                 <Zap className="size-3.5 text-amber-500" />
                 <span>Auto-Configured Presets</span>
@@ -275,7 +278,11 @@ export default function PaceIntake({
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 {presetCards.map(({ label, value, color, extra }) => (
-                  <div key={label} className="p-2.5 bg-card border border-border space-y-1">
+                  <div
+                    key={label}
+                    data-slot="card"
+                    className="card-diagonal-grid relative isolate overflow-hidden p-2.5 bg-card border border-border space-y-1"
+                  >
                     <span className="text-[10px] text-muted-foreground block uppercase">
                       {label}
                     </span>
@@ -584,7 +591,10 @@ export default function PaceIntake({
 
               <CardContent className="pt-4 space-y-4">
                 {/* Virtual Badge Card */}
-                <div className="p-4 bg-muted/40 border border-border space-y-3">
+                <div
+                  data-slot="card"
+                  className="card-diagonal-grid relative isolate overflow-hidden p-4 bg-muted/40 border border-border space-y-3"
+                >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">

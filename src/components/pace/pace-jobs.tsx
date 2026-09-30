@@ -97,7 +97,8 @@ export default function PaceJobs({
             {SKELETON_KEYS.map(key => (
               <div
                 key={key}
-                className="border border-border bg-muted/30 p-4 min-h-175px flex flex-col justify-between animate-pulse"
+                data-slot="card"
+                className="card-diagonal-grid relative isolate overflow-hidden border border-border bg-muted/30 p-4 min-h-175px flex flex-col justify-between shadow-sm animate-pulse"
               >
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
@@ -152,7 +153,7 @@ export default function PaceJobs({
       {focusedVehicle && (
         <div className="flex flex-1 min-h-0 h-full flex-col overflow-hidden animate-in fade-in duration-200 gap-3">
           {/* Focused View Header Bar */}
-          <div className="flex items-center justify-between shrink-0">
+          <div className="flex items-center justify-start shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -163,14 +164,6 @@ export default function PaceJobs({
               <ArrowLeft className="size-3.5" />
               <span>Back to Jobs</span>
             </Button>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted-foreground hidden sm:inline">
-                Focused Job
-              </span>
-              <span className="font-mono text-xs font-bold text-foreground bg-muted px-2.5 py-0.5 border border-border">
-                {focusedVehicle.license_plate}
-              </span>
-            </div>
           </div>
 
           {/* Focused Vehicle Card Container */}

@@ -11,6 +11,7 @@
   --foreground: oklch(0.148 0.004 228.8);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.148 0.004 228.8);
+  --card-grid-color: #e5e7eb;
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.148 0.004 228.8);
   --primary: oklch(0.511 0.096 186.391);
@@ -55,6 +56,7 @@
   --foreground: oklch(0.987 0.002 197.1);
   --card: oklch(0.218 0.008 223.9);
   --card-foreground: oklch(0.987 0.002 197.1);
+  --card-grid-color: oklch(1 0 0 / 10%);
   --popover: oklch(0.218 0.008 223.9);
   --popover-foreground: oklch(0.987 0.002 197.1);
   --primary: oklch(0.437 0.078 188.216);
@@ -159,4 +161,52 @@
   html {
     @apply font-mono;
   }
+}
+
+[data-slot="card"],
+.card-diagonal-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.header-diagonal-grid {
+  isolation: isolate;
+}
+
+[data-slot="card"]::before,
+.card-diagonal-grid::before,
+.header-diagonal-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 49%,
+      var(--card-grid-color) 49%,
+      var(--card-grid-color) 51%,
+      transparent 51%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 49%,
+      var(--card-grid-color) 49%,
+      var(--card-grid-color) 51%,
+      transparent 51%
+    );
+  background-size: 40px 40px;
+}
+
+[data-slot="card"]::before,
+.card-diagonal-grid::before {
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 100% 100%, #000 50%, transparent 90%);
+  mask-image: radial-gradient(ellipse 80% 80% at 100% 100%, #000 50%, transparent 90%);
+}
+
+.header-diagonal-grid::before {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.35) 30%, transparent 60%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.35) 30%, transparent 60%);
 }

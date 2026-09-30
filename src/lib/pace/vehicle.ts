@@ -65,11 +65,11 @@ export function elapsedSecondsSince(startedAt: string | null, now: Date = new Da
   return Math.max(0, Math.floor((now.getTime() - new Date(startedAt).getTime()) / 1000))
 }
 
-/** Formats a duration in seconds as e.g. "1h 05m 30s" or "05m 30s". */
+/** Formats a duration in seconds as e.g. "1h 05m 30s" or "0h 05m 30s". */
 export function formatDuration(totalSeconds: number): string {
-  const h = Math.floor(totalSeconds / 3600)
-  const m = Math.floor((totalSeconds % 3600) / 60)
-  const s = totalSeconds % 60
-  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`
-  return `${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds))
+  const h = Math.floor(safeSeconds / 3600)
+  const m = Math.floor((safeSeconds % 3600) / 60)
+  const s = safeSeconds % 60
+  return `${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`
 }

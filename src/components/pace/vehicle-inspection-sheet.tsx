@@ -230,7 +230,10 @@ function VehicleInspectionForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column: Core Identifiers & Service */}
             <div className="space-y-4">
-              <div className="border border-border p-4 bg-muted/20 space-y-4">
+              <div
+                data-slot="card"
+                className="card-diagonal-grid relative isolate overflow-hidden border border-border p-4 bg-muted/20 space-y-4"
+              >
                 <div className="flex items-center justify-between border-b border-border/60 pb-2">
                   <span className="text-xs font-heading font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                     <Car className="size-3.5 text-primary" />
@@ -321,7 +324,10 @@ function VehicleInspectionForm({
               </div>
 
               {/* Service Package Selection */}
-              <div className="border border-border p-4 bg-muted/20 space-y-3">
+              <div
+                data-slot="card"
+                className="card-diagonal-grid relative isolate overflow-hidden border border-border p-4 bg-muted/20 space-y-3"
+              >
                 <div className="flex items-center justify-between border-b border-border/60 pb-2">
                   <span className="text-xs font-heading font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                     <Wrench className="size-3.5 text-primary" />
@@ -371,7 +377,10 @@ function VehicleInspectionForm({
             {/* Right Column: Workflow Status, Timing, Notes & Audit */}
             <div className="space-y-4">
               {/* Status & Work Time */}
-              <div className="border border-border p-4 bg-muted/20 space-y-4">
+              <div
+                data-slot="card"
+                className="card-diagonal-grid relative isolate overflow-hidden border border-border p-4 bg-muted/20 space-y-4"
+              >
                 <div className="flex items-center justify-between border-b border-border/60 pb-2">
                   <span className="text-xs font-heading font-semibold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                     <Timer className="size-3.5 text-primary" />
@@ -463,7 +472,10 @@ function VehicleInspectionForm({
               </div>
 
               {/* Notes */}
-              <div className="border border-border p-4 bg-muted/20 space-y-2">
+              <div
+                data-slot="card"
+                className="card-diagonal-grid relative isolate overflow-hidden border border-border shadow-sm p-4 bg-muted/20 space-y-2"
+              >
                 <div className="flex items-center justify-between border-b border-border/60 pb-2">
                   <label
                     htmlFor="detailing-notes"
@@ -486,7 +498,10 @@ function VehicleInspectionForm({
               </div>
 
               {/* Audit Metadata */}
-              <div className="p-3 bg-muted/40 border border-border text-[11px] font-mono text-muted-foreground space-y-1">
+              <div
+                data-slot="card"
+                className="card-diagonal-grid relative isolate overflow-hidden p-3 bg-muted/40 border border-border text-[11px] font-mono text-muted-foreground space-y-1"
+              >
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <Hash className="size-3" /> Record ID:
