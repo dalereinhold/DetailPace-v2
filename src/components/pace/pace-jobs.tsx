@@ -1,9 +1,10 @@
-import { ArrowLeft, LayoutGrid, Plus } from "lucide-react"
+import { LayoutGrid, Plus } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getDisplayStatus, STATUS_ORDER } from "@/lib/pace/vehicle"
 import { supabase, type Vehicle } from "@/lib/supabase"
+import JobDetailWorkspace from "./job-detail-workspace"
 import VehicleCard from "./vehicle-card"
 
 const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5", "sk-6"]
@@ -13,6 +14,9 @@ interface PaceJobsProps {
   onVehiclesUpdated?: () => void
   onAddVehicleClick?: () => void
   onFocusedChange?: (isFocused: boolean) => void
+  onFocusedVehicleChange?: (vehicle: Vehicle | null) => void
+  focusedVehicleId?: string | null
+  onClearFocus?: () => void
 }
 
 export default function PaceJobs({
@@ -20,11 +24,17 @@ export default function PaceJobs({
   onVehiclesUpdated,
   onAddVehicleClick,
   onFocusedChange,
+  onFocusedVehicleChange,
+  focusedVehicleId: externalFocusedVehicleId,
+  onClearFocus,
 }: PaceJobsProps) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [focusedVehicleId, setFocusedVehicleId] = useState<string | null>(null)
+  const [internalFocusedVehicleId, setInternalFocusedVehicleId] = useState<string | null>(null)
+
+  const activeFocusedId =
+    externalFocusedVehicleId !== undefined ? externalFocusedVehicleId : internalFocusedVehicleId
 
   const fetchVehicles = useCallback(async () => {
     setError(null)
@@ -60,24 +70,38 @@ export default function PaceJobs({
 
   const MAX_JOBS = 12
   const displayedVehicles = useMemo(() => sortedVehicles.slice(0, MAX_JOBS), [sortedVehicles])
-  const focusedVehicle = vehicles.find(vehicle => vehicle.id === focusedVehicleId) ?? null
+  const focusedVehicle = vehicles.find(vehicle => vehicle.id === activeFocusedId) ?? null
+
+  const handleSetFocusedId = useCallback(
+    (id: string | null) => {
+      setInternalFocusedVehicleId(id)
+      if (id === null) {
+        onClearFocus?.()
+        onFocusedVehicleChange?.(null)
+        onFocusedChange?.(false)
+      } else {
+        const target = vehicles.find(v => v.id === id) ?? null
+        onFocusedVehicleChange?.(target)
+        onFocusedChange?.(Boolean(target))
+      }
+    },
+    [vehicles, onClearFocus, onFocusedVehicleChange, onFocusedChange]
+  )
 
   useEffect(() => {
-    if (focusedVehicleId && !focusedVehicle) {
-      setFocusedVehicleId(null)
+    if (activeFocusedId && !focusedVehicle && !loading) {
+      handleSetFocusedId(null)
     }
-  }, [focusedVehicle, focusedVehicleId])
+  }, [focusedVehicle, activeFocusedId, loading, handleSetFocusedId])
 
   useEffect(() => {
     onFocusedChange?.(Boolean(focusedVehicle))
-    return () => {
-      onFocusedChange?.(false)
-    }
-  }, [focusedVehicle, onFocusedChange])
+    onFocusedVehicleChange?.(focusedVehicle)
+  }, [focusedVehicle, onFocusedChange, onFocusedVehicleChange])
 
   return (
     <div
-      className={focusedVehicle ? "h-full min-h-0 flex flex-col" : "space-y-6"}
+      className={focusedVehicle ? "h-full min-h-0 flex-1 flex flex-col w-full" : "space-y-6"}
       id="pace-jobs-container"
     >
       {/* Error Notice */}
@@ -143,41 +167,20 @@ export default function PaceJobs({
                   key={vehicle.id}
                   vehicle={vehicle}
                   onUpdated={handleVehicleUpdated}
-                  onOpenFocus={() => setFocusedVehicleId(vehicle.id)}
+                  onOpenFocus={() => handleSetFocusedId(vehicle.id)}
                 />
               ))}
             </div>
           </div>
         ))}
 
+      {/* Dedicated Full-Bleed Job Detail Mobile Workspace (Replaces redundant card container & removes secondary banner row) */}
       {focusedVehicle && (
-        <div className="flex flex-1 min-h-0 h-full flex-col overflow-hidden animate-in fade-in duration-200 gap-3">
-          {/* Focused View Header Bar */}
-          <div className="flex items-center justify-start shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFocusedVehicleId(null)}
-              aria-label="Back to all jobs"
-              className="gap-2 font-mono text-xs uppercase tracking-wider h-8"
-            >
-              <ArrowLeft className="size-3.5" />
-              <span>Back to Jobs</span>
-            </Button>
-          </div>
-
-          {/* Focused Vehicle Card Container */}
-          <div className="min-h-0 flex-1 flex flex-col">
-            <VehicleCard
-              key={`focused-${focusedVehicle.id}`}
-              vehicle={focusedVehicle}
-              onUpdated={handleVehicleUpdated}
-              isFocused
-              onCloseFocus={() => setFocusedVehicleId(null)}
-              className="h-full"
-            />
-          </div>
-        </div>
+        <JobDetailWorkspace
+          vehicle={focusedVehicle}
+          onUpdated={handleVehicleUpdated}
+          onBack={() => handleSetFocusedId(null)}
+        />
       )}
     </div>
   )

@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js"
 import {
+  ArrowLeft,
   BarChart3,
   Car,
   ClipboardList,
@@ -31,7 +32,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { supabase } from "@/lib/supabase"
+import { supabase, type Vehicle } from "@/lib/supabase"
 
 type ActiveTab = "jobs" | "intake" | "records" | "stats"
 
@@ -60,6 +61,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [isJobFocused, setIsJobFocused] = useState(false)
+  const [focusedVehicle, setFocusedVehicle] = useState<Vehicle | null>(null)
   const { resolvedTheme, toggleTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const isMobile = useIsMobile()
@@ -101,8 +103,14 @@ export default function App() {
   const handleTabChange = (tab: ActiveTab) => {
     if (tab !== "jobs") {
       setIsJobFocused(false)
+      setFocusedVehicle(null)
     }
     setActiveTab(tab)
+  }
+
+  const handleExitFocus = () => {
+    setIsJobFocused(false)
+    setFocusedVehicle(null)
   }
 
   return (
@@ -118,29 +126,48 @@ export default function App() {
       <header className="header-diagonal-grid isolate overflow-hidden border-b border-border bg-card/70 backdrop-blur-md sticky top-0 z-30 shrink-0">
         {/* Main Header Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
-          {/* Brand Logo & Heading */}
-          <div className="flex items-center gap-3 shrink-0 select-none">
-            <button
-              type="button"
-              onClick={() => handleTabChange("jobs")}
-              aria-label="Go to Jobs"
-              className="size-9 bg-primary flex items-center justify-center text-primary-foreground shadow-xs shrink-0 hover:opacity-90 transition-opacity cursor-pointer border-none p-0 focus:outline-none"
-            >
-              <ClockCheck className="size-5" />
-            </button>
-            <div>
-              <span className="block font-heading text-base font-bold tracking-wider uppercase text-foreground leading-none">
-                DetailPace
-              </span>
-              <p className="text-xs text-muted-foreground font-mono mt-1">
-                Detailing Tracker &amp; Metrics
-              </p>
+          {/* Brand Logo & Heading / Consolidated Back Arrow when Job is Focused */}
+          {isJobFocused && activeTab === "jobs" ? (
+            <div className="flex items-center gap-2.5 shrink-0 select-none">
+              <button
+                type="button"
+                onClick={handleExitFocus}
+                aria-label="Back to Jobs list"
+                className="size-9 bg-muted hover:bg-accent text-foreground flex items-center justify-center shadow-xs shrink-0 cursor-pointer p-0 focus-visible:outline-2 focus-visible:outline-primary active:scale-95 transition-all rounded-none border border-border/40"
+              >
+                <ArrowLeft className="size-5" />
+              </button>
+              <div>
+                <span className="block font-heading text-base font-bold tracking-wider uppercase text-foreground leading-none">
+                  DetailPace
+                </span>
+                <p className="text-xs text-muted-foreground font-mono mt-0.5">Job Workspace</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3 shrink-0 select-none">
+              <button
+                type="button"
+                onClick={() => handleTabChange("jobs")}
+                aria-label="Go to Jobs"
+                className="size-9 bg-primary flex items-center justify-center text-primary-foreground shadow-xs shrink-0 hover:opacity-90 transition-opacity cursor-pointer border-none p-0 focus:outline-none"
+              >
+                <ClockCheck className="size-5" />
+              </button>
+              <div>
+                <span className="block font-heading text-base font-bold tracking-wider uppercase text-foreground leading-none">
+                  DetailPace
+                </span>
+                <p className="text-xs text-muted-foreground font-mono mt-1">
+                  Detailing Tracker &amp; Metrics
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Dedicated Quick Intake Button (Desktop only) */}
           <div className="flex items-center gap-2">
-            {!isMobile && (
+            {!isMobile && !isJobFocused && (
               <Button
                 id="header-intake-btn"
                 size="sm"
@@ -193,7 +220,7 @@ export default function App() {
         </div>
 
         {/* Desktop Sub-Header Navigation Bar */}
-        {!isMobile && (
+        {!isMobile && !isJobFocused && (
           <div className="border-t border-border bg-muted/40">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
               <nav className="flex items-center gap-1 py-1 font-mono text-xs">
@@ -269,22 +296,22 @@ export default function App() {
         )}
       </header>
 
-      {/* Main View Area */}
+      {/* Main View Area (Full-bleed without card container margins when job is focused) */}
       <main
-        className={`max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 ${
+        className={
           isJobFocused && activeTab === "jobs"
-            ? `flex-1 min-h-0 flex flex-col overflow-hidden py-3 sm:py-4 ${
-                isMobile ? "pb-20" : "pb-4"
+            ? "w-full flex-1 min-h-0 flex flex-col p-0 overflow-hidden"
+            : `max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 ${
+                isMobile ? "pb-24" : "pb-8"
               }`
-            : `py-6 sm:py-8 ${isMobile ? "pb-24" : "pb-8"}`
-        }`}
+        }
       >
         <Suspense fallback={<FeatureLoadingState />}>
           {/* VIEW 1: JOBS (Active Tab On Load) */}
           {activeTab === "jobs" && (
             <div
               className={`animate-in fade-in duration-200 ${
-                isJobFocused ? "h-full min-h-0 flex flex-col" : "space-y-6"
+                isJobFocused ? "h-full min-h-0 flex-1 flex flex-col w-full" : "space-y-6"
               }`}
             >
               <PaceJobs
@@ -292,6 +319,9 @@ export default function App() {
                 onVehiclesUpdated={triggerRefresh}
                 onAddVehicleClick={() => setIsIntakeOpen(true)}
                 onFocusedChange={setIsJobFocused}
+                onFocusedVehicleChange={setFocusedVehicle}
+                focusedVehicleId={focusedVehicle?.id ?? null}
+                onClearFocus={handleExitFocus}
               />
             </div>
           )}
@@ -326,8 +356,8 @@ export default function App() {
         </Suspense>
       </main>
 
-      {/* Mobile Bottom Navigation Bar (Full Width App Style) */}
-      {isMobile && (
+      {/* Mobile Bottom Navigation Bar (Hidden when actively focused on a job detail workspace) */}
+      {isMobile && !isJobFocused && (
         <nav
           aria-label="Mobile Bottom Navigation"
           className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border px-1.5 py-1 flex items-center justify-around shadow-lg pb-[max(0.35rem,env(safe-area-inset-bottom))]"
