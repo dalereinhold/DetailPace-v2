@@ -3,3 +3,6 @@ packages: []
 allowBuilds:
   esbuild: true
   msw: false
+
+minimumReleaseAgeExclude:
+  - vite-plugin-pwa@2.0.0

@@ -31,7 +31,7 @@ import {
 import { supabase, type Vehicle } from "@/lib/supabase"
 import VehicleInspectionSheet from "./vehicle-inspection-sheet"
 
-export interface JobDetailWorkspaceProps {
+export interface PaceJobsFocusedProps {
   vehicle: Vehicle
   onUpdated: () => void
   onBack?: () => void
@@ -51,7 +51,7 @@ const COMMON_NOTE_SNIPPETS = [
   "Ready for delivery",
 ]
 
-export default function JobDetailWorkspace({ vehicle, onUpdated }: JobDetailWorkspaceProps) {
+export default function PaceJobsFocused({ vehicle, onUpdated }: PaceJobsFocusedProps) {
   const [liveSeconds, setLiveSeconds] = useState(() => computeLiveSeconds(vehicle))
   const [busy, setBusy] = useState(false)
   const [notes, setNotes] = useState(vehicle.notes || "")

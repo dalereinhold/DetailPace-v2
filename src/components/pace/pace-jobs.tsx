@@ -2,9 +2,10 @@ import { LayoutGrid, Plus } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { getDisplayStatus, STATUS_ORDER } from "@/lib/pace/vehicle"
 import { supabase, type Vehicle } from "@/lib/supabase"
-import JobDetailWorkspace from "./job-detail-workspace"
+import PaceJobsFocused from "./pace-jobs-focused"
 import VehicleCard from "./vehicle-card"
 
 const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5", "sk-6"]
@@ -28,6 +29,7 @@ export default function PaceJobs({
   focusedVehicleId: externalFocusedVehicleId,
   onClearFocus,
 }: PaceJobsProps) {
+  const isMobile = useIsMobile()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -70,7 +72,9 @@ export default function PaceJobs({
 
   const MAX_JOBS = 12
   const displayedVehicles = useMemo(() => sortedVehicles.slice(0, MAX_JOBS), [sortedVehicles])
-  const focusedVehicle = vehicles.find(vehicle => vehicle.id === activeFocusedId) ?? null
+  const focusedVehicle = isMobile
+    ? (vehicles.find(vehicle => vehicle.id === activeFocusedId) ?? null)
+    : null
 
   const handleSetFocusedId = useCallback(
     (id: string | null) => {
@@ -93,6 +97,12 @@ export default function PaceJobs({
       handleSetFocusedId(null)
     }
   }, [focusedVehicle, activeFocusedId, loading, handleSetFocusedId])
+
+  useEffect(() => {
+    if (!isMobile && activeFocusedId) {
+      handleSetFocusedId(null)
+    }
+  }, [isMobile, activeFocusedId, handleSetFocusedId])
 
   useEffect(() => {
     onFocusedChange?.(Boolean(focusedVehicle))
@@ -167,7 +177,7 @@ export default function PaceJobs({
                   key={vehicle.id}
                   vehicle={vehicle}
                   onUpdated={handleVehicleUpdated}
-                  onOpenFocus={() => handleSetFocusedId(vehicle.id)}
+                  onOpenFocus={isMobile ? () => handleSetFocusedId(vehicle.id) : undefined}
                 />
               ))}
             </div>
@@ -176,7 +186,7 @@ export default function PaceJobs({
 
       {/* Dedicated Full-Bleed Job Detail Mobile Workspace (Replaces redundant card container & removes secondary banner row) */}
       {focusedVehicle && (
-        <JobDetailWorkspace
+        <PaceJobsFocused
           vehicle={focusedVehicle}
           onUpdated={handleVehicleUpdated}
           onBack={() => handleSetFocusedId(null)}
